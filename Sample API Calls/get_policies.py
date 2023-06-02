@@ -5,8 +5,6 @@ import config
 
 api_key = config.api_key
 
-client_api_id = 0 # leave zero unless you are a partner running this script on behalf of your customer with an API Key from your partner tenant.
-
 def main():
     policies = []
     #Functions
