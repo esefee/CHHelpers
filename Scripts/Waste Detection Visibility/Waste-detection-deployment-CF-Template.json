@@ -1,0 +1,136 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This CloudFormation template creates one IAM role and deploys a lambda function to tag assets found as part of the waste detection policy",
+    "Parameters": {
+        "1CloudHealthAPIKey": {
+            "Type": "String",
+            "Description": "REQUIRED: Enter an API Key with sufficient privileges to update Accounts inside CloudHealth",
+            "MinLength": "36",
+            "MaxLength": "36"
+        },
+        "2BucketTemplateLocation": {
+            "Type": "String",
+            "Description": "REQUIRED: Enter the S3 bucket where 'CloudHealth-Account-Configuration.zip' is stored.",
+            "MinLength": "1",
+            "MaxLength": "99"
+        },
+        "3PolicyID": {
+            "Type": "String",
+            "Description": "Required: This tells the script which policy to check. The ID can be gotten either from the URL of the policy or via the policies API"
+        }
+    },
+    "Resources": {
+        "LambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Description": "This function calls CloudHealth APIs and tags assets which may be wasteful",
+            "Properties": {
+                "Environment": {
+                    "Variables": {
+                        "api_key": {
+                            "Ref": "1CloudHealthAPIKey"
+                        },
+                        "policy_id":{
+                            "Ref": "3PolicyID"
+                        }
+                   }
+                },
+                "FunctionName": "cloudhealth_waste_detection",
+                "Handler": "lambda_function.lambda_handler",
+                "Architectures": [
+                    "arm64"
+                ],
+                "Code": {
+                    "S3Bucket": {
+                            "Ref": "2BucketTemplateLocation"
+                        },
+                    "S3Key": "waste-detection-asset-tagger.zip"
+                },
+                "Role": {
+                    "Fn::GetAtt": [
+                        "IAMRole",
+                        "Arn"
+                    ]
+                },
+              "Runtime": "python3.9",
+              "Timeout": 180,
+                "TracingConfig": {
+                    "Mode": "PassThrough"
+                }
+            }
+        },
+        "LambdaPermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "LambdaFunction",
+                        "Arn"
+                    ]
+                },    
+            	"Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [
+                        "EventsRule",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "IAMRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"RoleName":"CloudHealth-waste-detection-Role",
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [{
+						"Effect": "Allow",
+						"Principal": {
+							"Service": [ "lambda.amazonaws.com" ]
+						},
+						"Action": [ "sts:AssumeRole" ]
+      				}]
+				},
+				"Path": "/",
+				"Policies": [{
+					"PolicyName": "CloudHealth-waste-detection-Policy",
+					"PolicyDocument": {
+						"Version": "2012-10-17",
+						"Statement": [{
+							"Effect": "Allow",
+							"Action": [
+								"logs:CreateLogGroup",
+								"logs:CreateLogStream",
+								"logs:PutLogEvents"
+							],
+							"Resource": "*"
+						}]
+					}
+				}]
+			}
+		},
+        "EventsRule": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Name": "CloudHealthWasteDetectionEventTrigger",
+                "Description": {
+                    "Fn::Sub": "This event will trigger the ${LambdaFunction} function to run ever 12 hours"
+                },
+                "ScheduleExpression": "rate(12 hours)",
+                "State": "ENABLED",
+                "Targets": [
+                    {
+                        "Arn": {
+                            "Fn::GetAtt": [
+                                "LambdaFunction",
+                                "Arn"
+                            ]
+                        },
+                        "Id": "CloudHealth-Waste-Detection-12-Hours"
+                    }
+                ],
+                "EventBusName": "default"
+            }
+        }
+    }
+}
