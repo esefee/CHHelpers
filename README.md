@@ -3,7 +3,8 @@ This repo is meant to host Aria Cost (CloudHealth) scripts and example resources
 
 This repo is broken into three subsections, Scripts, API Examples, and Report Queries. 
 ## Scripts
-
+- Waste Detection Management
 ## API Examples
+- Get All Policies
 
 ## Report Queries
