@@ -3,8 +3,8 @@ This repo is meant to host Aria Cost (CloudHealth) scripts and example resources
 
 This repo is broken into three subsections, Scripts, API Examples, and Report Queries. 
 ## Scripts
-- Waste Detection Visibility
+- [Waste Detection Visibility](https://github.com/esefee/CHHelpers/tree/main/Scripts/Waste%20Detection%20Visibility)
 ## API Examples
-- Get All Policies
+- [Get All Policies](https://github.com/esefee/CHHelpers/blob/main/Sample%20API%20Calls/get_policies.py)
 
 ## Report Queries
