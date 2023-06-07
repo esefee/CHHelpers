@@ -1,0 +1,61 @@
+{
+    "schema": {
+        "name": "Detected Waste",
+        "rules": [
+            {
+                "type": "categorize",
+                "asset": "AwsTaggableAsset",
+                "ref_id": "1924145686101",
+                "name": "Waste detected by Month",
+                "tag_field": [
+                    "cht_waste_detected"
+                ]
+            },
+            {
+                "type": "categorize",
+                "asset": "AzureTaggableAsset",
+                "ref_id": "1924145686107",
+                "name": "Waste detected by Month",
+                "tag_field": [
+                    "cht_waste_detected"
+                ]
+            }
+        ],
+        "merges": [
+            {
+                "type": "Dynamic Group Block",
+                "to": "1924145686101",
+                "from": [
+                    "1924145686107"
+                ]
+            }
+        ],
+        "constants": [
+            {
+                "type": "Dynamic Group Block",
+                "list": [
+                    {
+                        "ref_id": "1924145686101",
+                        "name": "Waste detected by Month"
+                    },
+                    {
+                        "ref_id": "1924145686107",
+                        "name": "Waste detected by Month",
+                        "fwd_to": "1924145686101"
+                    }
+                ]
+            },
+            {
+                "type": "Static Group",
+                "list": [
+                    {
+                        "ref_id": "1924166595367",
+                        "name": "Other",
+                        "is_other": "true"
+                    }
+                ]
+            }
+        ],
+        "include_in_reports": "true"
+    }
+}
