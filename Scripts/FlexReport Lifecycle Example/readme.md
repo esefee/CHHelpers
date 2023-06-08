@@ -1,4 +1,4 @@
-#FlexReports Lifecycle.
+# FlexReports Lifecycle.
 This script demonstrates working with graphQL apis to manage the lifecycle of a FlexReport. In this example, we will:
 - Generate an access token from an API key
 - Create a FlexReport
