@@ -35,7 +35,7 @@ def main():
             tokens = response['data']['loginAPI']
             return(tokens)
     
-    #Query Tag Management API
+    #Query GraphQL API
     def graphql_query(access_token):
         base_url = 'apps.cloudhealthtech.com'
         headers = {'Content-type': 'application/json'} 
