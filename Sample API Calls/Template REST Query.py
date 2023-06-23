@@ -7,7 +7,7 @@ import ssl
 import config
 
 api_key = config.api_key
-query = "" #example: "/v1/aws_accounts"
+query = "/v1/customers" #example: "/v1/aws_accounts"
 
 def main():
     #Functions
