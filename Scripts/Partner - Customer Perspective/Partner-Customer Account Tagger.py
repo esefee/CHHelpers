@@ -1,9 +1,12 @@
 import http.client
 import json
 import ssl
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 import config
 
 api_key = config.api_key
+max_workers = config.max_workers
 
 class Customer:
     def __init__(self, name, id):
@@ -86,32 +89,34 @@ class AccountList:
     def __iter__(self):
         return iter(self.accounts)
 
-def fetch_customer_account_mapping(partnerapikey):
+def fetch_customer_account_mapping(partnerapikey, max_threads=5):
     customer_list = CustomerList(partnerapikey)
-    total_customers = len(customer_list)
     mapping = {}
-
-    # Add counters for total number of accounts and customers with accounts
     total_accounts = 0
     customers_with_accounts = 0
+    
+    def process_customer(customer):
+        nonlocal customers_with_accounts, total_accounts
 
-    for i, customer in enumerate(customer_list, start=1):
-        print(f"Processing customer {i} of {total_customers}: {customer.name} ({customer.id})")
+        print(f"Processing customer {customer.id}: {customer.name}")
         account_list = AccountList(partnerapikey, customer.id)
-        account_count = len(account_list)
-
-        # Update the counters
-        if account_count > 0:
+        
+        if account_list:
             customers_with_accounts += 1
-            total_accounts += account_count
+            total_accounts += len(account_list)
 
         for account in account_list:
             mapping[account.uniqueAccountID] = customer.name
-
-    # Print the summary
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(process_customer, customer) for customer in customer_list]
+        
+        # Wait for all tasks to complete
+        wait(futures)
+    
     print(f"\nSummary:\nTotal number of accounts: {total_accounts}")
     print(f"Number of customers with accounts: {customers_with_accounts}")
-
+    
     return mapping
 
 def add_cloudhealth_tag(api_key, asset_list, client_api_id=0):
@@ -144,15 +149,16 @@ def add_cloudhealth_tag(api_key, asset_list, client_api_id=0):
             body = json.dumps(data)
             connection = http.client.HTTPSConnection(base_url, context=ssl._create_unverified_context())
             connection.request('POST', url=query, body=body, headers=headers)
-            response = json.loads(connection.getresponse().read().decode())
+            response = connection.getresponse()
+            response_body = json.loads(response.read().decode())
+            print(response.status)
             connection.close()
-            if response['errors'] == []:
-                return response['updates']
+            if response_body['errors'] == []:
+                return response_body['updates']
             try:
-                print("Error Response from tagging function:", response['errors'])
+                print("Error Response from tagging function:", response_body['errors'])
             except KeyError:
                 raise Exception("There was an error with the tagging function")
-
 
 partner_accounts = AccountList(api_key, 'Partner')
 customer_account_lookup_table = fetch_customer_account_mapping(api_key)
