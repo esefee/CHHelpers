@@ -1,13 +1,38 @@
+import logging
 import http.client
+
+import logging.handlers
+
+# Set up a logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Create a file handler with log rotation
+file_handler = logging.handlers.RotatingFileHandler('script_log.log', maxBytes=5*1024*1024, backupCount=5)
+file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+
+# Optionally, create a console handler to print log messages to the console
+console_handler = logging.StreamHandler()
+console_formatter = logging.Formatter('%(levelname)s: %(message)s')
+console_handler.setFormatter(console_formatter)
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)
+
 import json
 import ssl
 import time
+import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import config
 
 api_key = config.api_key
 max_workers = config.max_workers
+max_retries = config.max_retries
+delay = config.delay
+concurrent_tags = 100
 
 class Customer:
     def __init__(self, name, id):
@@ -57,7 +82,7 @@ class AccountList:
         self._fetch_accounts(partnerapikey)
 
     def _fetch_accounts(self, partnerapikey):
-        #print(f"Fetching accounts for customer {self.customer_id}...")
+        logger.debug(f"Fetching accounts for customer {self.customer_id}...")
         page = 1
         while page:
             conn = http.client.HTTPSConnection('chapi.cloudhealthtech.com', context=ssl._create_unverified_context())
@@ -77,12 +102,12 @@ class AccountList:
                 try:
                     uniqueAccountID = account['owner_id']
                 except KeyError:
-                    print(f"Error processing account {account['id']} for customer {self.customer_id}: missing owner ID")
+                    logger.error(f"Error processing account {account['id']} for customer {self.customer_id}: missing owner ID")
                     continue
                 a = Account(self.customer_id, uniqueAccountID, account['id'])
                 self.accounts.append(a)
             conn.close()
-        #print(f"Found {len(self.accounts)} accounts for customer {self.customer_id}.")
+        logger.debug(f"Found {len(self.accounts)} accounts for customer {self.customer_id}.")
             
     def __len__(self):
         return len(self.accounts)
@@ -103,12 +128,11 @@ def fetch_customer_account_mapping(partnerapikey, max_threads=5):
 
     def process_customer(customer):
         nonlocal customers_with_accounts, total_accounts
-
-        print(f"Processing customer {customer.id}: {customer.name}")
+        logger.debug(f"Processing customer {customer.id}: {customer.name})")
         try:
             account_list = AccountList(partnerapikey, customer.id)
         except Exception as e:
-            print(f"Error fetching account list for customer {customer.id}: {e}")
+            logger.error(f"Error fetching account list for customer {customer.id}: {e}")
             return
 
         if account_list:
@@ -132,21 +156,20 @@ def fetch_customer_account_mapping(partnerapikey, max_threads=5):
             try:
                 future.result()
             except Exception as e:
-                print(f"Error in processing a customer: {e}")
+                logger.error(f"Error in processing a customer: {e}")
                 
-    print(f"\nSummary:\nTotal number of accounts: {total_accounts}")
-    print(f"Number of customers with accounts: {customers_with_accounts}")
+    logger.info(f"\nSummary:\nTotal number of accounts: {total_accounts}")
+    logger.info(f"Number of customers with accounts: {customers_with_accounts}")
     
     return mapping
 
 def add_cloudhealth_tag(api_key, asset_list):
-    max_workers=5
-    max_retries=1
-    delay=.1
-    concurrent_tags = 100
     if len(asset_list) == 0:
         raise Exception('No assets provided to tagging function')
     
+    base_url = 'chapi.cloudhealthtech.com'
+    query = '/v1/custom_tags'
+    headers = {'Content-type': 'application/json', 'Authorization': f'Bearer {api_key}'}
     def process_assets(assets):
         data = {"tag_groups": []}
         for asset in assets:
@@ -170,8 +193,15 @@ def add_cloudhealth_tag(api_key, asset_list):
             connection = http.client.HTTPSConnection(base_url, context=ssl._create_unverified_context())
             connection.request('POST', url=query, body=body, headers=headers)
             response = connection.getresponse()
-            response_body = json.loads(response.read().decode())
-            print(response.status, response_body)
+
+            try:
+                raw_response = response.read().decode()
+                logger.debug(f"Raw API Response: {raw_response}")
+                response_body = json.loads(raw_response)
+            except json.decoder.JSONDecodeError as e:
+                logger.error(f"Failed to decode JSON from response. Error: {e}")
+                logger.error(f"Raw Response: {raw_response}")
+                response_body = {}
             connection.close()
 
             if response.status == 200:
@@ -179,31 +209,21 @@ def add_cloudhealth_tag(api_key, asset_list):
                     return response_body['updates']
                 try:
                     last_error = response_body['errors']
-                    print("Error Response from tagging function:", last_error)
+                    logger.error(f"Error Response from tagging function:", last_error)
                 except KeyError:
-                    last_error = "There was an error with the tagging function"
-                    raise Exception(last_error)
+                    last_error = "There was an error with the request."
             else:
                 last_error = f"{response.status}: {response.reason}"
-
             time.sleep(delay)  # Delay before next retry
-
-        # If we reach this point, it means max retries were hit
-        print("Max retries were exceeded for this request.")
-        print(f"{response.status}: {last_error}")
-        print("Body of Request:")
-        print(body)
-
         return None
 
-    base_url = 'chapi.cloudhealthtech.com'
-    query = '/v1/custom_tags'
-    headers = {'Content-type': 'application/json', 'Authorization': f'Bearer {api_key}'}
 
     # Using ThreadPoolExecutor for parallel processing
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for i in range(0, len(asset_list), concurrent_tags):
+            # log batch number
+            logger.info(f"Tagging batch {math.ceil((i+1)/concurrent_tags)}")
             # Get the next {concurrent_tags} assets from the list
             assets = asset_list[i:i + concurrent_tags]
             futures.append(executor.submit(process_assets, assets))
@@ -215,7 +235,12 @@ def add_cloudhealth_tag(api_key, asset_list):
                 results.append(result)
         return results
 
+
 partner_accounts = AccountList(api_key, 'Partner')
+
+# Create a set to store all partner accounts
+partner_accounts_set = {account.uniqueAccountID for account in partner_accounts}
+
 customer_account_lookup_table = fetch_customer_account_mapping(api_key)
 
 accounts_to_tag = []
@@ -226,9 +251,24 @@ for account in partner_accounts:
             "asset_id": account.assetID,
             "tag_key": "CHT_Customer",
             "tag_value": customer_account_lookup_table[account.uniqueAccountID]
-            }
+        }
         accounts_to_tag.append(asset)
+        # Remove the account from the partner_accounts_set since it's found in the customer_account_lookup_table
+        partner_accounts_set.remove(account.uniqueAccountID)
     except KeyError:
         continue
-    
+
+# Tag accounts that aren't present in any customer tenant with "NULL"
+for account_id in partner_accounts_set:
+    account = next(account for account in partner_accounts if account.uniqueAccountID == account_id)
+    asset = {
+        "asset_type": "AwsAccount",
+        "asset_id": account.assetID,
+        "tag_key": "CHT_Customer",
+        "tag_value": None
+    }
+    accounts_to_tag.append(asset)
+
+logger.info(f"Total number of accounts to tag: {len(accounts_to_tag)}. \nTags will be batched in groups of {concurrent_tags} for a total of {math.ceil(len(accounts_to_tag)/concurrent_tags)} batches")
+
 add_cloudhealth_tag(api_key, accounts_to_tag)

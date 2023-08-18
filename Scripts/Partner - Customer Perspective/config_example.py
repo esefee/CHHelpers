@@ -2,3 +2,5 @@
 api_key = ""
 org_id = 0 # leave zero to create the perspective in the TLOU or whichever OU your accaount is in.
 max_workers = 10
+max_retries = 1
+delay = .1
