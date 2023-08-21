@@ -4,3 +4,4 @@ org_id = 0 # leave zero to create the perspective in the TLOU or whichever OU yo
 max_workers = 10
 max_retries = 1
 delay = .1
+concurrent_tags = 100 # leave at 100 if your total accounts/max_workers is greater than 100. otherwise you may be able to increase performance if you have fewer accounts or increase number of max workers.

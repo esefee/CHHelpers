@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Create a file handler with log rotation
-file_handler = logging.handlers.RotatingFileHandler('script_log.log', maxBytes=5*1024*1024, backupCount=5)
+file_handler = logging.handlers.RotatingFileHandler('Partner-Customer_Account_Tagger.log', maxBytes=5*1024*1024, backupCount=5)
 file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
@@ -32,7 +32,7 @@ api_key = config.api_key
 max_workers = config.max_workers
 max_retries = config.max_retries
 delay = config.delay
-concurrent_tags = 100
+concurrent_tags = config.concurrent_tags
 
 class Customer:
     def __init__(self, name, id):
@@ -158,7 +158,7 @@ def fetch_customer_account_mapping(partnerapikey, max_threads=5):
             except Exception as e:
                 logger.error(f"Error in processing a customer: {e}")
                 
-    logger.info(f"\nSummary:\nTotal number of accounts: {total_accounts}")
+    logger.info(f"Summary: Total number of accounts: {total_accounts}")
     logger.info(f"Number of customers with accounts: {customers_with_accounts}")
     
     return mapping
@@ -170,7 +170,7 @@ def add_cloudhealth_tag(api_key, asset_list):
     base_url = 'chapi.cloudhealthtech.com'
     query = '/v1/custom_tags'
     headers = {'Content-type': 'application/json', 'Authorization': f'Bearer {api_key}'}
-    def process_assets(assets):
+    def process_assets(assets, batch_number = None):
         data = {"tag_groups": []}
         for asset in assets:
             found = False
@@ -196,7 +196,10 @@ def add_cloudhealth_tag(api_key, asset_list):
 
             try:
                 raw_response = response.read().decode()
-                logger.debug(f"Raw API Response: {raw_response}")
+                if batch_number:
+                    logger.debug(f"Batch {batch_number}: Raw API Response: {raw_response}")
+                else:    
+                    logger.debug(f"Raw API Response: {raw_response}")
                 response_body = json.loads(raw_response)
             except json.decoder.JSONDecodeError as e:
                 logger.error(f"Failed to decode JSON from response. Error: {e}")
@@ -223,10 +226,11 @@ def add_cloudhealth_tag(api_key, asset_list):
         futures = []
         for i in range(0, len(asset_list), concurrent_tags):
             # log batch number
+            batch_number = math.ceil((i+1)/concurrent_tags)
             logger.info(f"Tagging batch {math.ceil((i+1)/concurrent_tags)}")
             # Get the next {concurrent_tags} assets from the list
             assets = asset_list[i:i + concurrent_tags]
-            futures.append(executor.submit(process_assets, assets))
+            futures.append(executor.submit(process_assets, assets, batch_number))
 
         results = []
         for future in as_completed(futures):
@@ -257,10 +261,12 @@ for account in partner_accounts:
         partner_accounts_set.remove(account.uniqueAccountID)
     except KeyError:
         continue
-
+logger.info(f"Total number of accounts to tag: {len(accounts_to_tag)}.")
+logger.info(f"Total number of accounts in partner tenant not assigned to customers: {len(partner_accounts_set)}.")
 # Tag accounts that aren't present in any customer tenant with "NULL"
 for account_id in partner_accounts_set:
     account = next(account for account in partner_accounts if account.uniqueAccountID == account_id)
+    logger.debug(f"Account {account.uniqueAccountID} found in partner tenant and is assigned to no customers. Setting CHT_Customer tag to None.")
     asset = {
         "asset_type": "AwsAccount",
         "asset_id": account.assetID,
@@ -269,6 +275,5 @@ for account_id in partner_accounts_set:
     }
     accounts_to_tag.append(asset)
 
-logger.info(f"Total number of accounts to tag: {len(accounts_to_tag)}. \nTags will be batched in groups of {concurrent_tags} for a total of {math.ceil(len(accounts_to_tag)/concurrent_tags)} batches")
-
+logger.info(f"Tags will be batched in groups of {concurrent_tags} for a total of {math.ceil(len(accounts_to_tag)/concurrent_tags)} batches")
 add_cloudhealth_tag(api_key, accounts_to_tag)
