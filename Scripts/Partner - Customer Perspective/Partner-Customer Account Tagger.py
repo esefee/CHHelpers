@@ -192,6 +192,7 @@ def add_cloudhealth_tag(api_key, asset_list):
         for _ in range(max_retries):
             connection = http.client.HTTPSConnection(base_url, context=ssl._create_unverified_context())
             connection.request('POST', url=query, body=body, headers=headers)
+            logger.debug(f"Batch {batch_number}: Request Body: {body}")
             response = connection.getresponse()
 
             try:
