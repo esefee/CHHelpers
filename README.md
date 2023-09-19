@@ -11,6 +11,7 @@ This repo is broken into three subsections, Scripts, API Examples, and Report Qu
 
 ## API Examples
 - [AWS Accounts GraphQL Query.py](https://github.com/esefee/CHHelpers/blob/main/Sample%20API%20Calls/AWS%20Accounts%20GraphQL%20Query.py)
+- [GraphQL Introspection.py](https://github.com/esefee/CHHelpers/blob/main/Sample%20API%20Calls/GraphQL%20Introspection.py)
 - [Get All Policies](https://github.com/esefee/CHHelpers/blob/main/Sample%20API%20Calls/get_policies.py)
 - [Template GraphQL Query](https://github.com/esefee/CHHelpers/blob/main/Sample%20API%20Calls/Template%20GraphQL%20Query.py)
 - [Template REST Query](https://github.com/esefee/CHHelpers/blob/main/Sample%20API%20Calls/Template%20REST%20Query.py)
