@@ -163,3 +163,5 @@ cython_debug/
 .DS
 .DS_Store
 response.json
+result.json
+CHHelpers.code-workspace

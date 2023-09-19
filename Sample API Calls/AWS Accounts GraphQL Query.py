@@ -41,7 +41,34 @@ def main():
         headers = {'Content-type': 'application/json'} 
         #Put the query here
         query = """
-
+            {awsAccounts (
+                filterRules: [
+                ]
+            ) {
+                totalCount
+                edges {
+                    node {
+                        id
+                        accountId
+                        name
+                        ownerId
+                        payerAccountId
+                        payerAccountName
+                        accountType
+                        tags {
+                            key
+                            value
+                        }
+                    }
+                },
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                    endCursor
+                }
+            }
+            }
                 """
         connection = http.client.HTTPSConnection(base_url, context=ssl._create_unverified_context())
         headers =   {

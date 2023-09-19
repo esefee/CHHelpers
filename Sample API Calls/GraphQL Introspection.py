@@ -41,7 +41,28 @@ def main():
         headers = {'Content-type': 'application/json'} 
         #Put the query here
         query = """
-
+                    {
+                    __type(name: "Query") {
+                        name
+                        fields {
+                        name
+                        description
+                        type {
+                            name
+                            kind
+                        }
+                        args {
+                            name
+                            description
+                            type {
+                            name
+                            kind
+                            }
+                            defaultValue
+                        }
+                        }
+                    }
+                    }
                 """
         connection = http.client.HTTPSConnection(base_url, context=ssl._create_unverified_context())
         headers =   {
