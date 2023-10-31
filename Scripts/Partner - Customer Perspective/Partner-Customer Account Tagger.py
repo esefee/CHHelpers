@@ -246,6 +246,7 @@ partner_accounts = AccountList(api_key, 'Partner')
 # Create a set to store all partner accounts
 partner_accounts_set = {account.uniqueAccountID for account in partner_accounts}
 
+# lookup table with account id and customer name. when account id is passed customer name is returned. used when building asset tagging list
 customer_account_lookup_table = fetch_customer_account_mapping(api_key)
 
 accounts_to_tag = []
@@ -264,6 +265,7 @@ for account in partner_accounts:
         continue
 logger.info(f"Total number of accounts to tag: {len(accounts_to_tag)}.")
 logger.info(f"Total number of accounts in partner tenant not assigned to customers: {len(partner_accounts_set)}.")
+
 # Tag accounts that aren't present in any customer tenant with "NULL"
 for account_id in partner_accounts_set:
     account = next(account for account in partner_accounts if account.uniqueAccountID == account_id)
@@ -275,6 +277,10 @@ for account_id in partner_accounts_set:
         "tag_value": None
     }
     accounts_to_tag.append(asset)
+
+# At this point we have a list of accounts to tag, if an asset should not have a tag the value is None, if it should have a tag the value is the customer name
+
+#Here is where we want to run a check between tags as they exist currently and accounts which need to be updated. 
 
 logger.info(f"Tags will be batched in groups of {concurrent_tags} for a total of {math.ceil(len(accounts_to_tag)/concurrent_tags)} batches")
 add_cloudhealth_tag(api_key, accounts_to_tag)

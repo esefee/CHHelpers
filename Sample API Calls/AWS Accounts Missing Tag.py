@@ -80,23 +80,27 @@ def get_aws_accounts_page(access_token, after_cursor=None):
         raise ValueError(f"Query Returned Errors: {response['errors'][0]['message']}")
     return response
 
-def get_all_aws_accounts(api_key):
+def get_all_aws_accounts_missing_tag(api_key, tag_key):
     tokens = get_tokens(api_key)
     access_token = tokens['accessToken']
     after_cursor = None
-    all_accounts = []
+    filtered_accounts = []
     while True:
         result = get_aws_accounts_page(access_token, after_cursor)
-        all_accounts.extend(result['data']['awsAccounts']['edges'])
 
+        # Filter out accounts with the cht_customer tag
+        for edge in result['data']['awsAccounts']['edges']:
+            tags = edge['node']['tags']
+            if all(tag['key'] != tag_key for tag in tags):
+                filtered_accounts.append(edge)
         if result['data']['awsAccounts']['pageInfo']['hasNextPage']:
             after_cursor = result['data']['awsAccounts']['pageInfo']['endCursor']
         else:
             break
-    return all_accounts
+    return filtered_accounts
 
 def main():
-    result = get_all_aws_accounts(api_key)
+    result = get_all_aws_accounts_missing_tag(api_key, 'CHT_Customer')
     with open('result.json', 'w') as newFile:
         json.dump(result, newFile)
 
