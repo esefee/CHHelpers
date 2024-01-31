@@ -58,7 +58,7 @@ class AWSAccounts:
         finally:
             connection.close()
 
-def read_csv_to_objects(file_path, api_key, client_api_id=0, max_workers=10):
+def read_csv_to_objects(file_path, api_key, client_api_id=0):
     """
     Reads a CSV file and converts each row into an AWSAccounts object.
     Uses ThreadPoolExecutor with max_workers for parallel processing.
@@ -107,7 +107,7 @@ def add_cloudhealth_tag(api_key, asset_list):
         last_error = None
         for _ in range(config.max_retries):
             try:
-                connection = http.client.HTTPSConnection(base_url, context=ssl._create_unverified_context())
+                connection = http.client.HTTPSConnection(base_url, context=ssl.create_default_context())
                 connection.request('POST', url=query, body=body, headers=headers)
                 logger.debug(f"Batch {batch_number}: Request Body: {body}")
                 response = connection.getresponse()
@@ -159,7 +159,7 @@ def add_cloudhealth_tag(api_key, asset_list):
 
 # Script execution
 try:
-    aws_accounts = read_csv_to_objects(config.file_path, config.api_key, config.client_api_id, config.max_workers)
+    aws_accounts = read_csv_to_objects(config.file_path, config.api_key, config.client_api_id)
     asset_list = [
         {
             'asset_type': 'AwsAccount',
