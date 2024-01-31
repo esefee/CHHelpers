@@ -71,14 +71,9 @@ def create_savings_flexreport(access_token):
         }
         """
     variables = { "reportInput": {"name": "Test Savings from RI and SP","notification": {"sendUserEmail": False},
-                    "query": {"sqlStatement": "WITH \"cxtemp_spsavings\" AS (SELECT timeInterval_Month AS Month, SUM(lineItem_UnblendedCost) AS SUM_lineItem_UnblendedCost, CONCAT(lineItem_ProductCode, ' SP') AS LineItem_ProductCode, SUM(savingsPlan_SavingsPlanEffectiveCost) AS SavingsPlanEffectiveCost, CAST((SUM(lineItem_UnblendedCost) - SUM(savingsPlan_SavingsPlanEffectiveCost)) AS DECIMAL(18, 2)) AS Savings FROM AWS_CUR WHERE (savingsPlan_SavingsPlanARN IS NOT NULL) AND (lineItem_LineItemDescription NOT LIKE '%SavingsPlanNegation%') GROUP BY timeInterval_Month, lineItem_ProductCode), \"cxtemp_risavings\" AS (SELECT timeInterval_Month AS Month, CAST((SUM(pricing_publicOnDemandCost) - SUM(Reservation_EffectiveCost)) AS DECIMAL(18, 2)) AS Savings, CONCAT(LineItem_ProductCode, ' RI') AS LineItem_ProductCode FROM AWS_CUR WHERE (reservation_ReservationARN IS NOT NULL) GROUP BY timeInterval_Month, LineItem_ProductCode)SELECT cxtemp_spsavings.Month, cxtemp_spsavings.LineItem_ProductCode, cxtemp_spsavings.Savings FROM cxtemp_spsavings Where Savings IS NOT NULL UNION SELECT cxtemp_risavings.Month, cxtemp_risavings.LineItem_ProductCode, cxtemp_risavings.Savings FROM cxtemp_risavings WHERE Savings IS NOT NULL ORDER BY Month ASC",
-                    "needBackLinkingForTags": True,
-                    "dataGranularity": "MONTHLY",
-                    "timeRange": {
-                    "last": 12,
-                    "excludeCurrent": True
-                    },
-                    "limit": -1}}}
+                    "query": {"sqlStatement" : "WITH \"cxtemp_aws\" AS (SELECT 'AWS' AS Cloud, timeInterval_Month AS Month, SUM(lineItem_UnblendedCost) AS Cost, product_ProductName AS Service FROM AWS_CUR GROUP BY timeInterval_Month, product_ProductName), \"cxtemp_azure\" AS (SELECT 'Azure' AS Cloud, timeInterval_Month AS Month, SUM(CostInBillingCurrency) AS Cost, ProductName AS Service FROM AZURE_COST_USAGE GROUP BY timeInterval_Month, ProductName), \"cxtemp_gcp\" AS (SELECT 'GCP' AS Cloud, timeInterval_Month AS Month, SUM(Total_Cost) AS Cost, Service_Description AS Service FROM GCP_BILLING_EXPORT GROUP BY timeInterval_Month, Service_Description) SELECT Cloud, Month, Cost, Service FROM cxtemp_aws UNION ALL SELECT Cloud, Month, Cost, Service FROM cxtemp_azure UNION ALL SELECT Cloud, Month, Cost, Service FROM cxtemp_gcp ORDER BY Service ASC", 
+                              "dataGranularity": "MONTHLY", 
+                              "timeRange": { "last": 12, "excludeCurrent": True }, "limit": -1}}}
     connection = http.client.HTTPSConnection(base_url, context=ssl._create_unverified_context())
     headers =   {
                     "Content-Type":"application/json",
