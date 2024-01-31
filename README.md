@@ -3,6 +3,7 @@ This repo is meant to host Aria Cost (CloudHealth) scripts and example resources
 
 This repo is broken into three subsections, Scripts, API Examples, and Report Queries.
 ## Scripts
+- [Add CloudHealth Tags from CSV](https://github.com/esefee/CHHelpers/tree/main/Scripts/Add%20CloudHealth%20Tags%20from%20CSV)
 - [FlexReport Lifecycle Example](https://github.com/esefee/CHHelpers/tree/main/Scripts/FlexReport%20Lifecycle%20Example)
 - [Partner - Customer Perspective](https://github.com/esefee/CHHelpers/tree/main/Scripts/Partner%20-%20Customer%20Perspective)
 - [Waste Detection Visibility](https://github.com/esefee/CHHelpers/tree/main/Scripts/Waste%20Detection%20Visibility)
