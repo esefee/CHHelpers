@@ -1,0 +1,27 @@
+{
+"book_name": "5 Percent Discount",
+"specification": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<CHTBillingRules createdBy=\"CloudHealth\"  date=\"03/26/24\">
+    <RuleGroup startDate=\"2024-01-01\">
+        <BillingRule name=\"exclude marketplace from EDP\" includeDataTransfer=\"true\">
+            <BasicBillingRule billingAdjustment=\"0.0\" billingRuleType=\"percentDiscount\"/>
+                <Product productName=\"ANY\">
+                    <LineItemDescription contains=\"AWS Marketplace\"/>
+                </Product>
+        </BillingRule>
+    </RuleGroup>
+    <RuleGroup startDate=\"2024-01-01\">
+        <BillingRule name=\"exclude support from EDP\" includeDataTransfer=\"true\">
+            <BasicBillingRule billingAdjustment=\"0.0\" billingRuleType=\"percentDiscount\"/>
+                <Product productName=\"AWS Support (Enterprise)\"/>
+                <Product productName=\"AWS Premium Support\"/>
+        </BillingRule>
+    </RuleGroup>
+    <RuleGroup startDate=\"2024-01-01\">
+        <BillingRule name=\"EDP discount\" includeDataTransfer=\"true\">
+            <BasicBillingRule billingAdjustment=\"5.0\" billingRuleType=\"percentDiscount\"/>
+                <Product productName=\"ANY\"/>
+        </BillingRule>
+    </RuleGroup>
+</CHTBillingRules>"
+}
