@@ -5,7 +5,7 @@ This repo is broken into three subsections, Scripts, API Examples, and Report Qu
 ## Scripts
 - [Add CloudHealth Tags from CSV](https://github.com/esefee/CHHelpers/tree/main/Scripts/Add%20CloudHealth%20Tags%20from%20CSV)
 - [FlexReport Lifecycle Example](https://github.com/esefee/CHHelpers/tree/main/Scripts/FlexReport%20Lifecycle%20Example)
-- [Partner - Assign Custom Price Book](https://github.com/esefee/CHHelpers/blob/main/Scripts/Partner%20-%20Assign%20Custom%20Price%20Book/README.md)
+- [Partner - Assign Custom Price Book](https://github.com/esefee/CHHelpers/blob/main/Scripts/Partner%20-%20Assign%20Custom%20Price%20Book)
 - [Partner - Customer Perspective](https://github.com/esefee/CHHelpers/tree/main/Scripts/Partner%20-%20Customer%20Perspective)
 - [Waste Detection Visibility](https://github.com/esefee/CHHelpers/tree/main/Scripts/Waste%20Detection%20Visibility)
 - [Partner - Custom Price Books Report](https://github.com/esefee/CHHelpers/tree/main/Scripts/Partner%20-%20Custom%20Price%20Books%20Report)
