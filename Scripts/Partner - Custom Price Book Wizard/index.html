@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudHealth Custom Price Book Wizard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <form id="xmlForm">
+        <h2>Custom Price Book Specification</h2>
+        <div>
+            <label for="priceBookName">Price Book Name:</label>
+            <input type="text" id="priceBookName" name="priceBookName" required>
+        </div>
+        <div>
+            <label for="createdBy">Created By (Email):</label>
+            <input type="email" id="createdBy" name="createdBy" required>
+        </div>
+        <div>
+            <label for="comment">Comment:</label>
+            <textarea id="comment" name="comment" class="small-textarea"></textarea>
+        </div>
+        <div id="ruleGroups">
+            <!-- Rule groups will be dynamically inserted here -->
+        </div>
+        <button type="button" id="addRuleGroupBtn" class="btn addBtn">Add Rule Group</button>
+        <button type="button" id="downloadPriceBookBtn" class="btn primary" onclick="encapsulateXMLInJSONAndExport();">Download Price Book</button>
+    </form>
+
+    <script src="script.js"></script>
+</body>
+</html>

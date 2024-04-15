@@ -1,0 +1,135 @@
+
+/* General Resets */
+* {
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    font-size: 16px;
+    color: #333;
+}
+
+/* Button Styles */
+.btn {
+    padding: 10px 15px;
+    margin-right: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.addBtn {
+    background-color: #28a745;
+}
+
+.removeBtn {
+    background-color: #dc3545;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* Enhancements for layout and spacing */
+div.ruleGroup, div.billingRule, div.product {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h3, h4, h5, h6 {
+    margin: 10px 0;
+    color: #007bff;
+}
+
+/* Flex container for form elements */
+.form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.form-row > label {
+    flex: 1;
+    margin-right: 20px;
+}
+
+input[type="text"], input[type="date"], input[type="number"], select, .small-input, .large-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.large-input {
+    flex-grow: 2;
+}
+
+.form-row label input, .form-row label select {
+    flex: 1;
+    margin-left: 10px;
+}
+
+/* Specific adjustments for narrower inputs */
+input[type="text"][name="ruleName"], 
+input[type="number"][name="billingAdjustment"], 
+.small-input {
+    max-width: 200px; /* Adjust width as necessary */
+}
+
+select[name="billingRuleType"], .small-input {
+    max-width: 220px; /* Adjust width as necessary */
+}
+
+/* Making comment box smaller */
+.small-textarea {
+    height: 100px;
+    resize: vertical;
+    width: 100%; /* Adjust width as necessary */
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Primary button styling */
+.btn.primary {
+    background-color: #0056b3; /* Blue shade */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.btn.primary:hover {
+    background-color: #003d82;
+}
+
+/* Grouping of rule elements */
+.rule-group-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
